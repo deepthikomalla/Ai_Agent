@@ -1,5 +1,6 @@
 import os
 import sys
+import requests
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
@@ -18,6 +19,33 @@ def get_weather(city: str) -> str:
     """Get weather for a given city."""
     return f"It's always sunny in {city}!"
 
+def get_post(post_id: int) -> str:
+    """Fetch a post by ID from JSONPlaceholder."""
+
+    url = f"https://jsonplaceholder.typicode.com/posts/{post_id}"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+
+        post = response.json()
+
+        result = (
+            f"Post ID: {post['id']}\n"
+            f"User ID: {post['userId']}\n"
+            f"Title: {post['title']}\n"
+            f"Body: {post['body']}"
+        )
+
+        print(result)
+        return result
+
+    except Exception as e:
+        error_msg = f"Error fetching post: {str(e)}"
+        print(error_msg)
+        return error_msg
+    
+
 def create_daily_thought() -> str:
     """Generate an inspirational daily thought using the LLM."""
     llm = ChatOpenAI(model="gpt-4o-mini")
@@ -26,7 +54,7 @@ def create_daily_thought() -> str:
 
 agent = create_agent(
     model="openai:gpt-4o",    
-    tools=[get_weather, create_daily_thought],
+    tools=[get_weather, create_daily_thought, get_post],
     system_prompt="You are a helpful assistant. Make sure that you only respond with whatever is coming as input to the agent, and do not add any extra commentary or explanation.",
 )
 
